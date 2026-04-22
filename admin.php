@@ -50,7 +50,28 @@ if (!in_array($tab, $allowedTabs, true)) {
 
 // Data yang selalu dibutuhkan (untuk beberapa tab)
 $categories = get_all_categories($conn);
-$products   = get_all_products($conn);
+
+// ── Pagination produk (tab=produk) ────────────────────────────────────────────
+$PROD_PER_PAGE  = 15; // jumlah produk per halaman di tab Produk
+$STOCK_PER_PAGE = 20; // jumlah item per halaman di tab Stok
+
+$prodPage    = max(1, (int) ($_GET['p_page'] ?? 1));
+$stockPage   = max(1, (int) ($_GET['s_page'] ?? 1));
+
+$totalProducts   = count_products($conn);
+$prodTotalPages  = max(1, (int) ceil($totalProducts / $PROD_PER_PAGE));
+$stockTotalPages = max(1, (int) ceil($totalProducts / $STOCK_PER_PAGE));
+
+// Clamp halaman agar tidak melebihi total
+$prodPage  = min($prodPage,  $prodTotalPages);
+$stockPage = min($stockPage, $stockTotalPages);
+
+$prodOffset  = ($prodPage  - 1) * $PROD_PER_PAGE;
+$stockOffset = ($stockPage - 1) * $STOCK_PER_PAGE;
+
+// Ambil produk sesuai halaman aktif
+$products     = get_products_paginated($conn, $PROD_PER_PAGE,  $prodOffset);
+$stockProducts = get_products_paginated($conn, $STOCK_PER_PAGE, $stockOffset);
 
 // Data statistik global (dipakai di ringkasan & pesanan)
 $dashStats  = get_dashboard_stats($conn);

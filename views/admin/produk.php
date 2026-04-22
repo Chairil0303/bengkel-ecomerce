@@ -121,7 +121,18 @@
 
 <!-- Daftar Produk -->
 <section class="bg-white rounded shadow p-5">
-    <h3 class="text-lg font-semibold mb-3">Daftar Produk</h3>
+    <!-- Header + info pagination -->
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h3 class="text-lg font-semibold">Daftar Produk</h3>
+        <?php
+        $prodStart = $totalProducts > 0 ? $prodOffset + 1 : 0;
+        $prodEnd   = min($prodOffset + $PROD_PER_PAGE, $totalProducts);
+        ?>
+        <span class="text-sm text-gray-500">
+            Menampilkan <strong><?= $prodStart ?>–<?= $prodEnd ?></strong> dari <strong><?= $totalProducts ?></strong> produk
+        </span>
+    </div>
+
     <div class="space-y-2">
         <?php if ($products && $products->num_rows > 0): ?>
             <?php
@@ -155,10 +166,11 @@
                         RP.<?= number_format((int) $p['price'], 0, ',', '.') ?> | Stok: <?= (int) $p['stock'] ?>
                     </span>
                     <div class="flex gap-2">
-                        <a href="admin.php?edit=<?= (int) $p['id'] ?>"
+                        <a href="admin.php?edit=<?= (int) $p['id'] ?>&p_page=<?= $prodPage ?>"
                            class="px-3 py-1 rounded border">Edit</a>
                         <form method="POST" onsubmit="return confirm('Hapus produk ini?');">
                             <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
+                            <input type="hidden" name="_redirect_page" value="<?= $prodPage ?>">
                             <button name="delete"
                                     class="px-3 py-1 rounded bg-red-600 text-white">Hapus</button>
                         </form>
@@ -169,4 +181,82 @@
             <p class="text-gray-500">Belum ada produk.</p>
         <?php endif; ?>
     </div>
+
+    <!-- Pagination Controls -->
+    <?php if ($prodTotalPages > 1): ?>
+    <div class="mt-5 flex flex-wrap items-center justify-center gap-1">
+        <?php
+        // Bangun base URL dengan semua GET params yang sudah ada kecuali p_page
+        $baseQuery = $_GET;
+        unset($baseQuery['p_page']);
+        $baseQuery['tab'] = 'produk';
+        $baseUrl = 'admin.php?' . http_build_query($baseQuery);
+        ?>
+
+        <!-- Tombol Pertama & Prev -->
+        <?php if ($prodPage > 1): ?>
+            <a href="<?= $baseUrl ?>&p_page=1"
+               class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+               «
+            </a>
+            <a href="<?= $baseUrl ?>&p_page=<?= $prodPage - 1 ?>"
+               class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+               ‹ Prev
+            </a>
+        <?php else: ?>
+            <span class="px-3 py-1.5 rounded border border-gray-200 text-sm text-gray-300 cursor-not-allowed">«</span>
+            <span class="px-3 py-1.5 rounded border border-gray-200 text-sm text-gray-300 cursor-not-allowed">‹ Prev</span>
+        <?php endif; ?>
+
+        <!-- Nomor Halaman (window ±2) -->
+        <?php
+        $pWinStart = max(1, $prodPage - 2);
+        $pWinEnd   = min($prodTotalPages, $prodPage + 2);
+        if ($pWinStart > 1): ?>
+            <a href="<?= $baseUrl ?>&p_page=1"
+               class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">1</a>
+            <?php if ($pWinStart > 2): ?>
+                <span class="px-2 py-1.5 text-sm text-gray-400">…</span>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php for ($pn = $pWinStart; $pn <= $pWinEnd; $pn++): ?>
+            <?php if ($pn === $prodPage): ?>
+                <span class="px-3 py-1.5 rounded border border-blue-600 bg-blue-600 text-white text-sm font-semibold">
+                    <?= $pn ?>
+                </span>
+            <?php else: ?>
+                <a href="<?= $baseUrl ?>&p_page=<?= $pn ?>"
+                   class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+                    <?= $pn ?>
+                </a>
+            <?php endif; ?>
+        <?php endfor; ?>
+
+        <?php if ($pWinEnd < $prodTotalPages): ?>
+            <?php if ($pWinEnd < $prodTotalPages - 1): ?>
+                <span class="px-2 py-1.5 text-sm text-gray-400">…</span>
+            <?php endif; ?>
+            <a href="<?= $baseUrl ?>&p_page=<?= $prodTotalPages ?>"
+               class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+                <?= $prodTotalPages ?>
+            </a>
+        <?php endif; ?>
+
+        <!-- Tombol Next & Terakhir -->
+        <?php if ($prodPage < $prodTotalPages): ?>
+            <a href="<?= $baseUrl ?>&p_page=<?= $prodPage + 1 ?>"
+               class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+               Next ›
+            </a>
+            <a href="<?= $baseUrl ?>&p_page=<?= $prodTotalPages ?>"
+               class="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+               »
+            </a>
+        <?php else: ?>
+            <span class="px-3 py-1.5 rounded border border-gray-200 text-sm text-gray-300 cursor-not-allowed">Next ›</span>
+            <span class="px-3 py-1.5 rounded border border-gray-200 text-sm text-gray-300 cursor-not-allowed">»</span>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 </section>

@@ -20,6 +20,29 @@ function get_all_products(mysqli $conn): mysqli_result|false
 }
 
 /**
+ * Hitung total produk (untuk pagination).
+ */
+function count_products(mysqli $conn): int
+{
+    $res = $conn->query("SELECT COUNT(*) AS total FROM products");
+    return $res ? (int) $res->fetch_assoc()['total'] : 0;
+}
+
+/**
+ * Ambil produk dengan LIMIT/OFFSET — untuk pagination.
+ *
+ * @param int $limit  Jumlah item per halaman
+ * @param int $offset Baris awal
+ */
+function get_products_paginated(mysqli $conn, int $limit, int $offset): mysqli_result|false
+{
+    $stmt = $conn->prepare("SELECT * FROM products ORDER BY id DESC LIMIT ? OFFSET ?");
+    $stmt->bind_param("ii", $limit, $offset);
+    $stmt->execute();
+    return $stmt->get_result();
+}
+
+/**
  * Ambil satu produk berdasarkan ID.
  */
 function get_product_by_id(mysqli $conn, int $id): ?array
